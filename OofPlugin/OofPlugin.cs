@@ -367,7 +367,7 @@ namespace OofPlugin
             }
             if (oofCount == 0) return;
 
-            switch (OofHelpers.DeadPlayers.Count)
+            switch (oofCount)
             {
                 default:
                     PlaySound(token, volume, Configuration.TooManyKillsSoundImportPath);
