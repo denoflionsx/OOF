@@ -8,6 +8,10 @@ using System.Numerics;
 /// ok i knooow partial class files are like not the right way to do things but like im lazy asf
 namespace OofPlugin
 {
+
+    public delegate void SaveSoundFilePathDelegate(string path);
+    public delegate string GetSoundFilePathDelegate();
+
     public partial class PluginUI
     {
 
@@ -150,7 +154,7 @@ namespace OofPlugin
         /// <summary>
         /// load audio interface
         /// </summary>
-        private void AddLoadAudioUI()
+        private void AddLoadAudioUI(GetSoundFilePathDelegate getcall, SaveSoundFilePathDelegate savecall, string helptext)
         {
             var WindowPos = ImGui.GetWindowPos();
             var windowPadding = ImGui.GetStyle().WindowPadding;
@@ -159,13 +163,13 @@ namespace OofPlugin
 
             ImGui.AlignTextToFramePadding();
 
-            ImGuiHelpers.SafeTextColoredWrapped(ImGuiColors.DalamudGrey, "Sound file to play");
+            ImGuiHelpers.SafeTextColoredWrapped(ImGuiColors.DalamudGrey, helptext);
             ImGuiComponents.HelpMarker(
                "The audio that is triggered on death/fall damage");
             ImGui.SameLine(ImGui.GetWindowWidth() - CalcButtonSize(em) - windowPadding.X);
             if (ImGuiComponents.IconButton(FontAwesomeIcon.UndoAlt))
             {
-                configuration.DefaultSoundImportPath = string.Empty;
+                savecall(string.Empty);
                 configuration.Save();
                 plugin.LoadSoundFile();
 
@@ -174,7 +178,7 @@ namespace OofPlugin
                 ImGui.SetTooltip("Reset audio file to default (oof)");
 
             ImGui.PushFont(UiBuilder.IconFont);
-            if (CornerButton(FontAwesomeIcon.Play.ToIconString(), "volume:play", ImDrawFlags.RoundCornersLeft)) plugin.PlaySound(plugin.CancelToken.Token);
+            if (CornerButton(FontAwesomeIcon.Play.ToIconString(), "volume:play", ImDrawFlags.RoundCornersLeft)) plugin.PlaySound(plugin.CancelToken.Token, 1, getcall());
             ImGui.PopFont();
             if (ImGui.IsItemHovered()) ImGui.SetTooltip("Play");
 
@@ -189,16 +193,15 @@ namespace OofPlugin
             ImGui.SameLine();
             var soundFileName = "Original Oof.wav";
 
-            if (configuration.DefaultSoundImportPath.Length > 0)
+            if (getcall().Length > 0)
             {
-                var formatString = getFileName().Match(configuration.DefaultSoundImportPath);
+                var formatString = getFileName().Match(getcall());
                 if (formatString.Success) soundFileName = formatString.Value;
 
             }
             var browseText = "Upload Audio";
             var buttonWidth = CalcButtonSize(browseText) + ImGui.GetFontSize() * 1.4f ;
             customDraggableText(soundFileName, buttonWidth);
-
 
             ImGui.SameLine();
             if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.FolderOpen, browseText))
@@ -207,7 +210,7 @@ namespace OofPlugin
                 {
                     if (!success || path.Length == 0) return;
 
-                    configuration.DefaultSoundImportPath = path;
+                    savecall(path);
                     configuration.Save();
                     plugin.LoadSoundFile();
                 }

@@ -48,6 +48,60 @@ namespace OofPlugin
         {
             DrawSettingsWindow();
         }
+
+        public string GetSingleDeathSound()
+        {
+            return configuration.DefaultSoundImportPath;
+        }
+
+        public void SaveSingleDeathSound(string path) {
+            configuration.DefaultSoundImportPath = path;
+        }
+
+        public string GetDoubleKillSound()
+        {
+            return configuration.DoubleKillSoundImportPath;
+        }
+
+        public void SaveDoubleKillSound(string path) {
+            configuration.DoubleKillSoundImportPath = path;
+        }
+
+        public string GetTripleKillSound()
+        {
+            return configuration.TripleKillSoundImportPath;
+        }
+
+        public void SetTripleKillSound(string path) {
+            configuration.TripleKillSoundImportPath = path;
+        }
+
+        public string GetQuadKillSound() {
+            return configuration.QuadKillSoundImportPath;
+        }
+
+        public void SetQuadKillSound(string path) {
+            configuration.QuadKillSoundImportPath = path;
+        }
+
+        public string GetFiveKillSound()
+        {
+            return configuration.FiveKillSoundImportPath;
+        }
+
+        public void SetFiveKillSound(string path) {
+            configuration.FiveKillSoundImportPath = path;
+        }
+
+        public string GetWipeKillSound()
+        {
+            return configuration.TooManyKillsSoundImportPath;
+        }
+
+        public void SetWipeKillSound(string path) {
+            configuration.TooManyKillsSoundImportPath = path;
+        }
+
         public void DrawSettingsWindow()
         {
             if (!SettingsVisible) return;
@@ -58,7 +112,12 @@ namespace OofPlugin
             {
                 
 
-                AddLoadAudioUI();
+                AddLoadAudioUI(GetSingleDeathSound, SaveSingleDeathSound, "Sound file to play for one death");
+                AddLoadAudioUI(GetDoubleKillSound, SaveDoubleKillSound, "Sound file to play for two deaths");
+                AddLoadAudioUI(GetTripleKillSound, SetTripleKillSound, "Sound file to play for three deaths");
+                AddLoadAudioUI(GetQuadKillSound, SetQuadKillSound, "Sound file to play for four deaths");
+                AddLoadAudioUI(GetFiveKillSound, SetFiveKillSound, "Sound file to play for five deaths");
+                AddLoadAudioUI(GetWipeKillSound, SetWipeKillSound, "Sound file to play for six+ deaths");
 
                 /// volume cntrol -----
                 var oofVolume = configuration.Volume;

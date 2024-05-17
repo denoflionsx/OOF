@@ -28,6 +28,11 @@ namespace OofPlugin
         //audio settings
         public float Volume { get; set; } = 0.5f;
         public string DefaultSoundImportPath { get; set; } = string.Empty;
+        public string DoubleKillSoundImportPath { get; set; } = string.Empty;
+        public string TripleKillSoundImportPath { get; set; } = string.Empty;
+        public string QuadKillSoundImportPath { get; set; } = string.Empty;
+        public string FiveKillSoundImportPath { get; set; } = string.Empty;
+        public string TooManyKillsSoundImportPath { get; set; } = string.Empty;
 
         // the below exist just to make saving less cumbersome
 

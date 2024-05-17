@@ -32,6 +32,26 @@
 		    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		    <Visible>false</Visible>
 	    </Content>
+		<Content Include="..\Data\doublekill.wav">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<Visible>false</Visible>
+		</Content>
+		<Content Include="..\Data\HolyShit_F.wav">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<Visible>false</Visible>
+		</Content>
+		<Content Include="..\Data\monsterkill.wav">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<Visible>false</Visible>
+		</Content>
+		<Content Include="..\Data\multikill.wav">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<Visible>false</Visible>
+		</Content>
+		<Content Include="..\Data\ultrakill.wav">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<Visible>false</Visible>
+		</Content>
 		<Content Include="..\Data\credits.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<Visible>false</Visible>

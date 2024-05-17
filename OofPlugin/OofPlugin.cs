@@ -109,8 +109,39 @@ namespace OofPlugin
             {
                 var path = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "oof.wav");
                 soundFile = path;
-                return;
+                Configuration.DefaultSoundImportPath = soundFile;
             }
+
+            if (Configuration.DoubleKillSoundImportPath.Length == 0)
+            {
+                var path = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "doublekill.wav");
+                Configuration.DoubleKillSoundImportPath = path;
+            }
+
+            if (Configuration.TripleKillSoundImportPath.Length == 0)
+            {
+                var path = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "multikill.wav");
+                Configuration.TripleKillSoundImportPath = path;
+            }
+
+            if (Configuration.QuadKillSoundImportPath.Length == 0)
+            {
+                var path = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "monsterkill.wav");
+                Configuration.QuadKillSoundImportPath = path;
+            }
+
+            if (Configuration.FiveKillSoundImportPath.Length == 0)
+            {
+                var path = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "ultrakill.wav");
+                Configuration.FiveKillSoundImportPath = path;
+            }
+
+            if (Configuration.TooManyKillsSoundImportPath.Length == 0)
+            {
+                var path = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "HolyShit_F.wav");
+                Configuration.TooManyKillsSoundImportPath = path;
+            }
+
             soundFile = Configuration.DefaultSoundImportPath;
         }
         private void OnCommand(string command, string args)
@@ -229,7 +260,7 @@ namespace OofPlugin
         /// </summary>
         /// <param name="token">cancellation token</param>
         /// <param name="volume">optional volume param</param>
-        public void PlaySound(CancellationToken token, float volume = 1)
+        public void PlaySound(CancellationToken token, float volume = 1, string sound = "")
         {
             Task.Run(() =>
             {
@@ -237,7 +268,15 @@ namespace OofPlugin
                 WaveStream reader;
                 try
                 {
-                    reader = new MediaFoundationReader(soundFile);
+                    if (sound != string.Empty)
+                    {
+                        PluginLog.Info(sound);
+                        reader = new MediaFoundationReader(sound);
+                    }
+                    else
+                    {
+                        reader = new MediaFoundationReader(soundFile);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -292,6 +331,65 @@ namespace OofPlugin
             Util.OpenLink("https://www.youtube.com/watch?v=0twDETh6QaI");
         }
 
+        public void OriginalOofCode(CancellationToken token)
+        {
+            foreach (var player in OofHelpers.DeadPlayers)
+            {
+                if (player.DidPlayOof) continue;
+                float volume = 1f;
+                if (Configuration.DistanceBasedOof && player.Distance != ClientState!.LocalPlayer!.Position)
+                {
+                    var dist = 0f;
+                    if (player.Distance != Vector3.Zero) dist = Vector3.Distance(ClientState!.LocalPlayer!.Position, player.Distance);
+                    volume = CalcVolumeFromDist(dist);
+                }
+                PlaySound(token, volume);
+                player.DidPlayOof = true;
+                break;
+
+            }
+        }
+
+        public void CustomOofCode(CancellationToken token) {
+            float volume = 1f;
+            int oofCount = 0;
+            foreach (var player in OofHelpers.DeadPlayers)
+            {
+                if (player.DidPlayOof) continue;
+                if (Configuration.DistanceBasedOof && player.Distance != ClientState!.LocalPlayer!.Position)
+                {
+                    var dist = 0f;
+                    if (player.Distance != Vector3.Zero) dist = Vector3.Distance(ClientState!.LocalPlayer!.Position, player.Distance);
+                    volume = CalcVolumeFromDist(dist);
+                }
+                player.DidPlayOof = true;
+                oofCount++;
+            }
+            if (oofCount == 0) return;
+
+            switch (OofHelpers.DeadPlayers.Count)
+            {
+                default:
+                    PlaySound(token, volume, Configuration.TooManyKillsSoundImportPath);
+                    break;
+                case 1:
+                    PlaySound(token, volume, Configuration.DefaultSoundImportPath);
+                    break;
+                case 2:
+                    PlaySound(token, volume, Configuration.DoubleKillSoundImportPath);
+                    break;
+                case 3:
+                    PlaySound(token, volume, Configuration.TripleKillSoundImportPath);
+                    break;
+                case 4:
+                    PlaySound(token, volume, Configuration.QuadKillSoundImportPath);
+                    break;
+                case 5:
+                    PlaySound(token, volume, Configuration.FiveKillSoundImportPath);
+                    break;
+            }
+        }
+
         /// <summary>
         /// check deadPlayers every once in a while. prevents multiple oof from playing too fast
         /// </summary>
@@ -304,21 +402,8 @@ namespace OofPlugin
                 if (token.IsCancellationRequested) break;
                 if (!OofHelpers.DeadPlayers.Any()) continue;
                 if (ClientState!.LocalPlayer! == null) continue;
-                foreach (var player in OofHelpers.DeadPlayers)
-                {
-                    if (player.DidPlayOof) continue;
-                    float volume = 1f;
-                    if (Configuration.DistanceBasedOof && player.Distance != ClientState!.LocalPlayer!.Position)
-                    {
-                        var dist = 0f;
-                        if (player.Distance != Vector3.Zero) dist = Vector3.Distance(ClientState!.LocalPlayer!.Position, player.Distance);
-                        volume = CalcVolumeFromDist(dist);
-                    }
-                    PlaySound(token, volume);
-                    player.DidPlayOof = true;
-                    break;
 
-                }
+                CustomOofCode(token);
             }
         }
         public float CalcVolumeFromDist(float dist,float distMax = 30)
