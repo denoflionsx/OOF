@@ -12,6 +12,7 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using NAudio.Wave;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -55,6 +56,12 @@ namespace OofPlugin
         private float prevVel { get; set; } = 0;
         private float distJump { get; set; } = 0;
         private bool wasJumping { get; set; } = false;
+        private int KillStreakTick { get; set; } = 0;
+        private int KillStreakCounter { get; set; } = 0;
+        private int KillStreakCounterLast { get; set; } = 0;
+        private float KillStreakVolume { get; set; } = 0;
+        private Queue<string> QueuedSounds = new Queue<string>();
+        private bool isSoundCurrentlyPlaying = false;
 
         //public class DeadPlayer
         //{
@@ -254,6 +261,12 @@ namespace OofPlugin
             soundOut?.Dispose();
 
         }
+
+        public void QueueSound(string sound) {
+            QueuedSounds.Enqueue(sound);
+            KillStreakTick = 0;
+        }
+
         /// <summary>
         /// Play sound but without referencing windows.forms.
         /// much of the code from: https://github.com/kalilistic/Tippy/blob/5c18d6b21461b0bbe4583a86787ef4a3565e5ce6/src/Tippy/Tippy/Logic/TippyController.cs#L11
@@ -351,8 +364,7 @@ namespace OofPlugin
         }
 
         public void CustomOofCode(CancellationToken token) {
-            float volume = 1f;
-            int oofCount = 0;
+
             foreach (var player in OofHelpers.DeadPlayers)
             {
                 if (player.DidPlayOof) continue;
@@ -360,34 +372,58 @@ namespace OofPlugin
                 {
                     var dist = 0f;
                     if (player.Distance != Vector3.Zero) dist = Vector3.Distance(ClientState!.LocalPlayer!.Position, player.Distance);
-                    volume = CalcVolumeFromDist(dist);
+                    KillStreakVolume = CalcVolumeFromDist(dist);
                 }
                 player.DidPlayOof = true;
-                oofCount++;
+                KillStreakCounter++;
             }
-            if (oofCount == 0) return;
 
-            switch (oofCount)
+            if (KillStreakTick == 5)
             {
-                default:
-                    PlaySound(token, volume, Configuration.TooManyKillsSoundImportPath);
-                    break;
-                case 1:
-                    PlaySound(token, volume, Configuration.DefaultSoundImportPath);
-                    break;
-                case 2:
-                    PlaySound(token, volume, Configuration.DoubleKillSoundImportPath);
-                    break;
-                case 3:
-                    PlaySound(token, volume, Configuration.TripleKillSoundImportPath);
-                    break;
-                case 4:
-                    PlaySound(token, volume, Configuration.QuadKillSoundImportPath);
-                    break;
-                case 5:
-                    PlaySound(token, volume, Configuration.FiveKillSoundImportPath);
-                    break;
+                KillStreakCounter = 0;
+                KillStreakTick = 0;
+                KillStreakVolume = 1.0f;
+                KillStreakCounterLast = 0;
             }
+
+            if (KillStreakCounterLast != KillStreakCounter)
+            {
+                switch (KillStreakCounter)
+                {
+                    default:
+                        PlaySound(token, KillStreakVolume, Configuration.TooManyKillsSoundImportPath);
+                        KillStreakCounter = 0;
+                        KillStreakTick = 0;
+                        KillStreakVolume = 1.0f;
+                        KillStreakCounterLast = 0;
+                        break;
+                    case 0:
+                        break;
+                    case 1:
+                        QueueSound(Configuration.DefaultSoundImportPath);
+                        break;
+                    case 2:
+                        QueueSound(Configuration.DoubleKillSoundImportPath);
+                        break;
+                    case 3:
+                        QueueSound(Configuration.TripleKillSoundImportPath);
+                        break;
+                    case 4:
+                        QueueSound(Configuration.QuadKillSoundImportPath);
+                        break;
+                    case 5:
+                        QueueSound(Configuration.FiveKillSoundImportPath);
+                        break;
+                }
+            }
+
+            if (QueuedSounds.Count > 0)
+            {
+                PlaySound(token, KillStreakVolume, QueuedSounds.Dequeue());
+            }
+
+            KillStreakCounterLast = KillStreakCounter;
+            KillStreakTick++;
         }
 
         /// <summary>
@@ -398,7 +434,7 @@ namespace OofPlugin
         {
             while (true)
             {
-                await Task.Delay(200, token);
+                await Task.Delay(1000, token);
                 if (token.IsCancellationRequested) break;
                 if (!OofHelpers.DeadPlayers.Any()) continue;
                 if (ClientState!.LocalPlayer! == null) continue;
