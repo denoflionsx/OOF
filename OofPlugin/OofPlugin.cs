@@ -275,6 +275,7 @@ namespace OofPlugin
         /// <param name="volume">optional volume param</param>
         public void PlaySound(CancellationToken token, float volume = 1, string sound = "")
         {
+            isSoundCurrentlyPlaying = true;
             Task.Run(() =>
             {
                 isSoundPlaying = true;
@@ -323,6 +324,7 @@ namespace OofPlugin
                         {
                             soundOut.PlaybackStopped -= OnPlaybackStopped;
                             isSoundPlaying = false;
+                            isSoundCurrentlyPlaying = false;
                         }
                     }
                     catch (Exception ex)
@@ -417,7 +419,7 @@ namespace OofPlugin
                 }
             }
 
-            if (QueuedSounds.Count > 0)
+            if (QueuedSounds.Count > 0 && !isSoundCurrentlyPlaying)
             {
                 PlaySound(token, KillStreakVolume, QueuedSounds.Dequeue());
             }
