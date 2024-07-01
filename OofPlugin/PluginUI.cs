@@ -13,6 +13,9 @@ using System;
 using System.IO;
 using System.Numerics;
 using System.Text.RegularExpressions;
+using Dalamud.Interface.Textures.TextureWraps;
+using Dalamud.Plugin.Services;
+using Dalamud.Interface.Textures;
 
 namespace OofPlugin
 {
@@ -21,7 +24,7 @@ namespace OofPlugin
         private Configuration configuration;
 
         private OofPlugin plugin;
-        private readonly IDalamudTextureWrap creditsTexture;
+        private readonly ISharedImmediateTexture creditsTexture;
         private FileDialogManager manager { get; }
         private bool settingsVisible = false;
         private float fallOptionsHeight = 0;
@@ -31,7 +34,7 @@ namespace OofPlugin
             get { return settingsVisible; }
             set { settingsVisible = value; }
         }
-        public PluginUI(Configuration configuration, OofPlugin plugin, DalamudPluginInterface pluginInterface)
+        public PluginUI(Configuration configuration, OofPlugin plugin, IDalamudPluginInterface pluginInterface)
         {
             this.configuration = configuration;
             this.plugin = plugin;
@@ -40,8 +43,7 @@ namespace OofPlugin
                 AddedWindowFlags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking,
             };
             var imagePath = Path.Combine(pluginInterface.AssemblyLocation.Directory?.FullName!, "credits.png");
-
-            this.creditsTexture = pluginInterface.UiBuilder.LoadImage(imagePath)!;
+            this.creditsTexture = Service.TextureProvider.GetFromFile(imagePath)!;
         }
 
         public void Draw()
@@ -334,13 +336,14 @@ namespace OofPlugin
 
 
                 //logo
-                var size = new Vector2(this.creditsTexture.Width , this.creditsTexture.Height);
+                var creditsTextureWrap = this.creditsTexture.GetWrapOrDefault();
+                var size = new Vector2(creditsTextureWrap.Width , creditsTextureWrap.Height);
                 ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.Zero);
                 ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 13);
                 ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0));
                 ImGui.SetCursorPos(ImGui.GetWindowSize() - size);
 
-                if (ImGui.ImageButton(this.creditsTexture.ImGuiHandle, size)) Util.OpenLink("https://github.com/Frogworks-Interactive");
+                if (ImGui.ImageButton(creditsTextureWrap.ImGuiHandle, size)) Util.OpenLink("https://github.com/Frogworks-Interactive");
                 ImGui.PopStyleVar(2);
                 ImGui.PopStyleColor();
                 if (ImGui.IsItemHovered())
