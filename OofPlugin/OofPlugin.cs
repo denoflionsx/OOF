@@ -12,7 +12,6 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using NAudio.Wave;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -39,7 +38,7 @@ namespace OofPlugin
         [PluginService] public static IPluginLog PluginLog { get; set; } = null!;
         //[PluginService] public static ObjectTable ObjectTable { get; private set; } = null!;
 
-        private DalamudPluginInterface PluginInterface { get; init; }
+        private IDalamudPluginInterface PluginInterface { get; init; }
         private ICommandManager CommandManager { get; init; }
         private Configuration Configuration { get; init; }
         private PluginUI PluginUi { get; init; }
@@ -56,12 +55,6 @@ namespace OofPlugin
         private float prevVel { get; set; } = 0;
         private float distJump { get; set; } = 0;
         private bool wasJumping { get; set; } = false;
-        private int KillStreakTick { get; set; } = 0;
-        private int KillStreakCounter { get; set; } = 0;
-        private int KillStreakCounterLast { get; set; } = 0;
-        private float KillStreakVolume { get; set; } = 0;
-        private Queue<string> QueuedSounds = new Queue<string>();
-        private bool isSoundCurrentlyPlaying = false;
 
         //public class DeadPlayer
         //{
@@ -74,15 +67,16 @@ namespace OofPlugin
         public CancellationTokenSource CancelToken;
 
         public OofPlugin(
-            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] ICommandManager commandManager)
+            IDalamudPluginInterface pluginInterface,
+            ICommandManager commandManager)
         {
             PluginInterface = pluginInterface;
             CommandManager = commandManager;
             Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             Configuration.Initialize(PluginInterface);
 
-            PluginUi = new PluginUI(Configuration, this, PluginInterface);
+            Service.Initialize(PluginInterface);
+            PluginUi = new PluginUI(Configuration, this, pluginInterface);
             OofHelpers = new OofHelpers();
 
             // load audio file. idk if this the best way
@@ -103,6 +97,7 @@ namespace OofPlugin
 
             PluginInterface.UiBuilder.Draw += DrawUI;
             PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
+            PluginInterface.UiBuilder.OpenMainUi += DrawConfigUI;
             Framework.Update += FrameworkOnUpdate;
 
             // lmao
@@ -261,12 +256,6 @@ namespace OofPlugin
             soundOut?.Dispose();
 
         }
-
-        public void QueueSound(string sound) {
-            QueuedSounds.Enqueue(sound);
-            KillStreakTick = 0;
-        }
-
         /// <summary>
         /// Play sound but without referencing windows.forms.
         /// much of the code from: https://github.com/kalilistic/Tippy/blob/5c18d6b21461b0bbe4583a86787ef4a3565e5ce6/src/Tippy/Tippy/Logic/TippyController.cs#L11
@@ -275,7 +264,6 @@ namespace OofPlugin
         /// <param name="volume">optional volume param</param>
         public void PlaySound(CancellationToken token, float volume = 1, string sound = "")
         {
-            isSoundCurrentlyPlaying = true;
             Task.Run(() =>
             {
                 isSoundPlaying = true;
@@ -324,7 +312,6 @@ namespace OofPlugin
                         {
                             soundOut.PlaybackStopped -= OnPlaybackStopped;
                             isSoundPlaying = false;
-                            isSoundCurrentlyPlaying = false;
                         }
                     }
                     catch (Exception ex)
@@ -366,7 +353,8 @@ namespace OofPlugin
         }
 
         public void CustomOofCode(CancellationToken token) {
-
+            float volume = 1f;
+            int oofCount = 0;
             foreach (var player in OofHelpers.DeadPlayers)
             {
                 if (player.DidPlayOof) continue;
@@ -374,58 +362,34 @@ namespace OofPlugin
                 {
                     var dist = 0f;
                     if (player.Distance != Vector3.Zero) dist = Vector3.Distance(ClientState!.LocalPlayer!.Position, player.Distance);
-                    KillStreakVolume = CalcVolumeFromDist(dist);
+                    volume = CalcVolumeFromDist(dist);
                 }
                 player.DidPlayOof = true;
-                KillStreakCounter++;
+                oofCount++;
             }
+            if (oofCount == 0) return;
 
-            if (KillStreakTick == 5)
+            switch (oofCount)
             {
-                KillStreakCounter = 0;
-                KillStreakTick = 0;
-                KillStreakVolume = 1.0f;
-                KillStreakCounterLast = 0;
+                default:
+                    PlaySound(token, volume, Configuration.TooManyKillsSoundImportPath);
+                    break;
+                case 1:
+                    PlaySound(token, volume, Configuration.DefaultSoundImportPath);
+                    break;
+                case 2:
+                    PlaySound(token, volume, Configuration.DoubleKillSoundImportPath);
+                    break;
+                case 3:
+                    PlaySound(token, volume, Configuration.TripleKillSoundImportPath);
+                    break;
+                case 4:
+                    PlaySound(token, volume, Configuration.QuadKillSoundImportPath);
+                    break;
+                case 5:
+                    PlaySound(token, volume, Configuration.FiveKillSoundImportPath);
+                    break;
             }
-
-            if (KillStreakCounterLast != KillStreakCounter)
-            {
-                switch (KillStreakCounter)
-                {
-                    default:
-                        PlaySound(token, KillStreakVolume, Configuration.TooManyKillsSoundImportPath);
-                        KillStreakCounter = 0;
-                        KillStreakTick = 0;
-                        KillStreakVolume = 1.0f;
-                        KillStreakCounterLast = 0;
-                        break;
-                    case 0:
-                        break;
-                    case 1:
-                        QueueSound(Configuration.DefaultSoundImportPath);
-                        break;
-                    case 2:
-                        QueueSound(Configuration.DoubleKillSoundImportPath);
-                        break;
-                    case 3:
-                        QueueSound(Configuration.TripleKillSoundImportPath);
-                        break;
-                    case 4:
-                        QueueSound(Configuration.QuadKillSoundImportPath);
-                        break;
-                    case 5:
-                        QueueSound(Configuration.FiveKillSoundImportPath);
-                        break;
-                }
-            }
-
-            if (QueuedSounds.Count > 0 && !isSoundCurrentlyPlaying)
-            {
-                PlaySound(token, KillStreakVolume, QueuedSounds.Dequeue());
-            }
-
-            KillStreakCounterLast = KillStreakCounter;
-            KillStreakTick++;
         }
 
         /// <summary>
@@ -436,7 +400,7 @@ namespace OofPlugin
         {
             while (true)
             {
-                await Task.Delay(1000, token);
+                await Task.Delay(200, token);
                 if (token.IsCancellationRequested) break;
                 if (!OofHelpers.DeadPlayers.Any()) continue;
                 if (ClientState!.LocalPlayer! == null) continue;
@@ -481,6 +445,9 @@ namespace OofPlugin
             CancelToken.Cancel();
             CancelToken.Dispose();
 
+            PluginInterface.UiBuilder.Draw -= DrawUI;
+            PluginInterface.UiBuilder.OpenConfigUi -= DrawConfigUI;
+            PluginInterface.UiBuilder.OpenMainUi -= DrawConfigUI;
             Framework.Update -= FrameworkOnUpdate;
             try
             {

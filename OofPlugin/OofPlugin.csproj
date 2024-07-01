@@ -72,7 +72,7 @@
 
 
 	<ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="2.1.12" />
+    <PackageReference Include="DalamudPackager" Version="2.1.13" />
 	<PackageReference Include="NAudio.Core" Version="2.1.0" />
 	<PackageReference Include="NAudio.Wasapi" Version="2.1.0" />		
     <Reference Include="FFXIVClientStructs">
