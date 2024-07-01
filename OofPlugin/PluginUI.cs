@@ -114,7 +114,7 @@ namespace OofPlugin
             {
                 
 
-                AddLoadAudioUI(GetSingleDeathSound, SaveSingleDeathSound, "Sound file to play for one death");
+                AddLoadAudioUI(GetSingleDeathSound, SaveSingleDeathSound, "Sound file to play for one death and fall damage");
                 AddLoadAudioUI(GetDoubleKillSound, SaveDoubleKillSound, "Sound file to play for two deaths");
                 AddLoadAudioUI(GetTripleKillSound, SetTripleKillSound, "Sound file to play for three deaths");
                 AddLoadAudioUI(GetQuadKillSound, SetQuadKillSound, "Sound file to play for four deaths");
