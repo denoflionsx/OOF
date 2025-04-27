@@ -55,6 +55,8 @@ namespace OofPlugin
         private float prevVel { get; set; } = 0;
         private float distJump { get; set; } = 0;
         private bool wasJumping { get; set; } = false;
+        private bool didPlayerExist = false;
+        private Vector3 PlayerPositionCache = new(0, 0, 0);
 
         //public class DeadPlayer
         //{
@@ -175,6 +177,14 @@ namespace OofPlugin
             {
                 PluginLog.Error("failed to check for oof condition:", e.Message);
             }
+
+            didPlayerExist = ClientState.LocalPlayer != null;
+            if (didPlayerExist)
+            {
+                PlayerPositionCache.X = ClientState.LocalPlayer!.Position.X;
+                PlayerPositionCache.Y = ClientState.LocalPlayer!.Position.Y;
+                PlayerPositionCache.Z = ClientState.LocalPlayer!.Position.Z;
+            }
         }
 
         /// <summary>
@@ -216,7 +226,7 @@ namespace OofPlugin
             }
             else
             {
-                if (Configuration.OofOnDeathSelf) return;
+                if (!Configuration.OofOnDeathSelf) return;
                 OofHelpers.AddRemoveDeadPlayer(ClientState!.LocalPlayer!);
             }
 
@@ -339,10 +349,10 @@ namespace OofPlugin
             {
                 if (player.DidPlayOof) continue;
                 float volume = 1f;
-                if (Configuration.DistanceBasedOof && player.Distance != ClientState!.LocalPlayer!.Position)
+                if (Configuration.DistanceBasedOof && player.Distance != PlayerPositionCache)
                 {
                     var dist = 0f;
-                    if (player.Distance != Vector3.Zero) dist = Vector3.Distance(ClientState!.LocalPlayer!.Position, player.Distance);
+                    if (player.Distance != Vector3.Zero) dist = Vector3.Distance(PlayerPositionCache, player.Distance);
                     volume = CalcVolumeFromDist(dist);
                 }
                 PlaySound(token, volume);
@@ -358,10 +368,10 @@ namespace OofPlugin
             foreach (var player in OofHelpers.DeadPlayers)
             {
                 if (player.DidPlayOof) continue;
-                if (Configuration.DistanceBasedOof && player.Distance != ClientState!.LocalPlayer!.Position)
+                if (Configuration.DistanceBasedOof && player.Distance != PlayerPositionCache)
                 {
                     var dist = 0f;
-                    if (player.Distance != Vector3.Zero) dist = Vector3.Distance(ClientState!.LocalPlayer!.Position, player.Distance);
+                    if (player.Distance != Vector3.Zero) dist = Vector3.Distance(PlayerPositionCache, player.Distance);
                     volume = CalcVolumeFromDist(dist);
                 }
                 player.DidPlayOof = true;
@@ -401,9 +411,16 @@ namespace OofPlugin
             while (true)
             {
                 await Task.Delay(200, token);
-                if (token.IsCancellationRequested) break;
-                if (!OofHelpers.DeadPlayers.Any()) continue;
-                if (ClientState!.LocalPlayer! == null) continue;
+                if (token.IsCancellationRequested)
+                {
+                    PluginLog.Warning("Sound loop died?");
+                    break;
+                }
+                if (!OofHelpers.DeadPlayers.Any())
+                {
+                    continue;
+                }
+                if (!didPlayerExist) continue;
 
                 CustomOofCode(token);
             }
