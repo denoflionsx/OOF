@@ -209,7 +209,7 @@ namespace OofPlugin
                 {
                     foreach (var member in PartyList)
                     {
-                        OofHelpers.AddRemoveDeadPlayer(member, member.Territory.Id == ClientState!.TerritoryType);
+                        OofHelpers.AddRemoveDeadPlayer(member, member.Territory.RowId == ClientState!.TerritoryType);
                     }
                 }
 
