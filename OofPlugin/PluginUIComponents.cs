@@ -2,7 +2,7 @@
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.Numerics;
 /// ok i knooow partial class files are like not the right way to do things but like im lazy asf
@@ -116,7 +116,7 @@ namespace OofPlugin
                 configuration.Save();
             }
             ImGui.SameLine();
-            ImGuiHelpers.SafeTextColoredWrapped(ImGuiColors.DalamudWhite2, title);
+            ImGui.TextColoredWrapped(ImGuiColors.DalamudWhite2, title);
 
             ImGui.SameLine(ImGui.GetWindowWidth() - textSize.X - ImGui.GetFontSize() * 1f - padding.X);
 
@@ -124,7 +124,7 @@ namespace OofPlugin
             lowOpacityRed[3] = 30;
             var statusColor = toggle ? ImGuiColors.DalamudGrey2 : lowOpacityRed;
 
-            ImGuiHelpers.SafeTextColoredWrapped(statusColor, $"{text}");
+            ImGui.TextColoredWrapped(statusColor, $"{text}");
             ImGui.SameLine();
     
             ImGui.Spacing();
@@ -137,7 +137,7 @@ namespace OofPlugin
         {
             if (color == Vector4.Zero) color = ImGuiColors.DalamudWhite;
             ImGui.PushFont(UiBuilder.IconFont);
-            ImGuiHelpers.SafeTextColoredWrapped(color, text);
+            ImGui.TextColoredWrapped(color, text);
             ImGui.PopFont();
         }
 
@@ -163,7 +163,7 @@ namespace OofPlugin
 
             ImGui.AlignTextToFramePadding();
 
-            ImGuiHelpers.SafeTextColoredWrapped(ImGuiColors.DalamudGrey, helptext);
+            ImGui.TextColoredWrapped(ImGuiColors.DalamudGrey, helptext);
             ImGuiComponents.HelpMarker(
                "The audio that is triggered on death/fall damage");
             ImGui.SameLine(ImGui.GetWindowWidth() - CalcButtonSize(em) - windowPadding.X);
@@ -244,7 +244,7 @@ namespace OofPlugin
 
             ImGui.SetCursorPos(cursorPos);
             ImGui.InvisibleButton("###customDraggableText", panelMax - panelMin);
-            if (ImGui.IsItemHovered() && shouldScroll) ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEW);
+            if (ImGui.IsItemHovered() && shouldScroll) ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEw);
             var dist = panelMin.X;
 
             if (ImGui.IsItemActive() && shouldScroll)

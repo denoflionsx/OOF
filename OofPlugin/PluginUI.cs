@@ -6,8 +6,8 @@ using Dalamud.Interface.Internal;
 using Dalamud.Interface.Utility;
 using Dalamud.Plugin;
 using Dalamud.Utility;
-using ImGuiNET;
-using ImPlotNET;
+using Dalamud.Bindings.ImGui;
+using Dalamud.Bindings.ImPlot;
 using ImGuiScene;
 using System;
 using System.IO;
@@ -124,7 +124,7 @@ namespace OofPlugin
                 /// volume cntrol -----
                 var oofVolume = configuration.Volume;
                 var headingColor = ImGuiColors.DalamudGrey;
-                ImGuiHelpers.SafeTextColoredWrapped(headingColor, "Volume");
+                ImGui.TextColoredWrapped(headingColor, "Volume");
                 ImGui.AlignTextToFramePadding();
                 IconTextColor(FontAwesomeIcon.VolumeMute.ToIconString(), headingColor);
                 ImGui.SameLine();
@@ -147,7 +147,7 @@ namespace OofPlugin
 
                 //ImGuiComponents.HelpMarker(
                 //  "turn on/off various conditions to trigger sound");
-                ImGuiHelpers.SafeTextColoredWrapped(ImGuiColors.DalamudGrey, "Play sound on");
+                ImGui.TextColoredWrapped(ImGuiColors.DalamudGrey, "Play sound on");
 
                 // when self falls options
                 var oofOnFall = configuration.OofOnFall;
@@ -253,7 +253,7 @@ namespace OofPlugin
 
 
 
-                ImGuiHelpers.SafeTextColoredWrapped(ImGuiColors.DalamudGrey, "Lower volume based on how far someone dies from you, from 0 to 30 yalms");
+                ImGui.TextColoredWrapped(ImGuiColors.DalamudGrey, "Lower volume based on how far someone dies from you, from 0 to 30 yalms");
 
 
 
@@ -281,7 +281,7 @@ namespace OofPlugin
                     ImPlot.SetupAxisLimitsConstraints(ImAxis.Y1,0, 1);
                     ImPlot.SetupAxisZoomConstraints(ImAxis.X1, 30,30);
                     ImPlot.SetupAxisZoomConstraints(ImAxis.Y1, 1, 1);
-                    ImPlot.SetupAxes(null, null, ImPlotAxisFlags.None, ImPlotAxisFlags.NoTickLabels);
+                    unsafe { ImPlot.SetupAxes((byte*)IntPtr.Zero, (byte*)IntPtr.Zero, ImPlotAxisFlags.None, ImPlotAxisFlags.NoTickLabels); }
                     ImPlot.PopStyleColor();
                     ImPlot.SetupFinish();
                    
@@ -291,7 +291,7 @@ namespace OofPlugin
                 }
                 ImGui.Columns(2);
 
-                ImGuiHelpers.SafeTextColoredWrapped(headingColor, "Falloff Intensity");
+                ImGui.TextColoredWrapped(headingColor, "Falloff Intensity");
                 var distanceFalloff = configuration.DistanceFalloff;
                 ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
                 if (ImGui.SliderFloat("###death:distance:falloff", ref distanceFalloff, 0.0f, 1.0f))
@@ -301,7 +301,7 @@ namespace OofPlugin
                 }
 
                 ImGui.NextColumn();
-                ImGuiHelpers.SafeTextColoredWrapped(headingColor, "Minimum Volume");
+                ImGui.TextColoredWrapped(headingColor, "Minimum Volume");
                 var distanceMinVolume = configuration.DistanceMinVolume;
                 ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - ImGui.GetStyle().WindowPadding.X);
                 if (ImGui.SliderFloat("###death:distance:volume", ref distanceMinVolume, 0.0f, 1.0f))
@@ -325,12 +325,12 @@ namespace OofPlugin
                 var desc = "Hot Tip: You can Macro the /oofvideo command to\n for easy and streamlined access to this video.";
                 if (ImGui.IsItemHovered()) ImGui.SetTooltip(desc);
 
-                ImGuiHelpers.SafeTextColoredWrapped(ImGuiColors.DalamudGrey, "Learn about the history behind the Roblox Oof with Hbomberguy's Documentary");
+                ImGui.TextColoredWrapped(ImGuiColors.DalamudGrey, "Learn about the history behind the Roblox Oof with Hbomberguy's Documentary");
 
                
 
                 ImGui.Spacing();
-                ImGuiHelpers.SafeTextColoredWrapped(ImGuiColors.DalamudGrey, "Original Oof sound by Joey Kuras");
+                ImGui.TextColoredWrapped(ImGuiColors.DalamudGrey, "Original Oof sound by Joey Kuras");
 
                 ImGui.Spacing();
 
@@ -343,7 +343,7 @@ namespace OofPlugin
                 ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0));
                 ImGui.SetCursorPos(ImGui.GetWindowSize() - size);
 
-                if (ImGui.ImageButton(creditsTextureWrap.ImGuiHandle, size)) Util.OpenLink("https://github.com/Frogworks-Interactive");
+                if (ImGui.ImageButton(creditsTextureWrap.Handle, size)) Util.OpenLink("https://github.com/Frogworks-Interactive");
                 ImGui.PopStyleVar(2);
                 ImGui.PopStyleColor();
                 if (ImGui.IsItemHovered())

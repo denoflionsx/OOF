@@ -240,7 +240,7 @@ namespace OofPlugin
             // dont run btwn moving areas & also wont work in combat
             if (Condition[ConditionFlag.BetweenAreas]) return;
             if (!Configuration.OofOnFallBattle && Condition[ConditionFlag.InCombat]) return;
-            if (!Configuration.OofOnFallMounted && (Condition[ConditionFlag.Mounted] || Condition[ConditionFlag.Mounted2])) return;
+            if (!Configuration.OofOnFallMounted && (Condition[ConditionFlag.Mounted] || Condition[ConditionFlag.RidingPillion])) return;
 
             var isJumping = Condition[ConditionFlag.Jumping];
             var pos = ClientState!.LocalPlayer!.Position.Y;
