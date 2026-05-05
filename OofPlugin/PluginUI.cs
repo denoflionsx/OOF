@@ -8,7 +8,6 @@ using Dalamud.Plugin;
 using Dalamud.Utility;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Bindings.ImPlot;
-using ImGuiScene;
 using System;
 using System.IO;
 using System.Numerics;

@@ -36,7 +36,7 @@ namespace OofPlugin
         [PluginService] public static ICondition Condition { get; private set; } = null!;
         [PluginService] public static IPartyList PartyList { get; private set; } = null!;
         [PluginService] public static IPluginLog PluginLog { get; set; } = null!;
-        //[PluginService] public static ObjectTable ObjectTable { get; private set; } = null!;
+        [PluginService] public static IObjectTable ObjectTable { get; private set; } = null!;
 
         private IDalamudPluginInterface PluginInterface { get; init; }
         private ICommandManager CommandManager { get; init; }
@@ -167,7 +167,7 @@ namespace OofPlugin
         }
         private void FrameworkOnUpdate(IFramework framework)
         {
-            if (ClientState == null || ClientState.LocalPlayer == null) return;
+            if (ClientState == null || ObjectTable.LocalPlayer == null) return;
             try
             {
                 if (Configuration.OofOnFall) CheckFallen();
@@ -178,12 +178,12 @@ namespace OofPlugin
                 PluginLog.Error("failed to check for oof condition:", e.Message);
             }
 
-            didPlayerExist = ClientState.LocalPlayer != null;
+            didPlayerExist = ObjectTable.LocalPlayer != null;
             if (didPlayerExist)
             {
-                PlayerPositionCache.X = ClientState.LocalPlayer!.Position.X;
-                PlayerPositionCache.Y = ClientState.LocalPlayer!.Position.Y;
-                PlayerPositionCache.Z = ClientState.LocalPlayer!.Position.Z;
+                PlayerPositionCache.X = ObjectTable.LocalPlayer!.Position.X;
+                PlayerPositionCache.Y = ObjectTable.LocalPlayer!.Position.Y;
+                PlayerPositionCache.Z = ObjectTable.LocalPlayer!.Position.Z;
             }
         }
 
@@ -227,7 +227,7 @@ namespace OofPlugin
             else
             {
                 if (!Configuration.OofOnDeathSelf) return;
-                OofHelpers.AddRemoveDeadPlayer(ClientState!.LocalPlayer!);
+                OofHelpers.AddRemoveDeadPlayer(ObjectTable.LocalPlayer!);
             }
 
         }
@@ -243,7 +243,7 @@ namespace OofPlugin
             if (!Configuration.OofOnFallMounted && (Condition[ConditionFlag.Mounted] || Condition[ConditionFlag.RidingPillion])) return;
 
             var isJumping = Condition[ConditionFlag.Jumping];
-            var pos = ClientState!.LocalPlayer!.Position.Y;
+            var pos = ObjectTable.LocalPlayer!.Position.Y;
             var velocity = prevPos - pos;
 
             if (isJumping && !wasJumping)
